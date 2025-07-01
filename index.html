@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel Green - Contact Card</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .title {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .company {
+            font-size: 14px;
+            color: #00cc6a;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        
+        .contact-item {
+            display: block;
+            margin: 15px 0;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            transition: background 0.3s ease;
+        }
+        
+        .contact-item:hover {
+            background: #e8f5e8;
+        }
+        
+        .qr-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+        
+        .qr-code {
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
+            background: white;
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-code img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="avatar">DG</div>
+        <div class="name">Daniel Green</div>
+        <div class="title">CEO</div>
+        <div class="company">Electron Green</div>
+        
+        <a href="tel:+447733344333" class="contact-item">
+            📱 +44 7733 344 333
+        </a>
+        
+        <a href="mailto:daniel.green@electrongreen.com" class="contact-item">
+            📧 daniel.green@electrongreen.com
+        </a>
+        
+        <a href="https://electrongreen.com" target="_blank" class="contact-item">
+            🌐 electrongreen.com
+        </a>
+        
+        <div class="contact-item">
+            📍 54 Charlotte Street, London, W1T 2NS
+        </div>
+        
+        <div class="qr-section">
+            <p>Scan to save contact:</p>
+            <div class="qr-code" id="qrcode">
+                <div>Loading QR...</div>
+            </div>
+            <button class="download-btn" onclick="downloadVCard()">📥 Save Contact</button>
+            <button class="download-btn" onclick="shareCard()">📤 Share</button>
+        </div>
+    </div>
+
+    <script>
+        // Create vCard data
+        const vcard = `BEGIN:VCARD
+VERSION:3.0
+FN:Daniel Green
+N:Green;Daniel;;;
+TEL;TYPE=CELL:+447733344333
+EMAIL:daniel.green@electrongreen.com
+ORG:Electron Green
+URL:https://electrongreen.com
+ADR;TYPE=WORK:;;54 Charlotte Street;London;;W1T 2NS;UK
+TITLE:CEO
+END:VCARD`;
+
+        // Generate QR code
+        function generateQR() {
+            const qrContainer = document.getElementById('qrcode');
+            const qrData = encodeURIComponent(vcard);
+            
+            // Try multiple QR services
+            const qrUrls = [
+                `https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${qrData}`,
+                `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`,
+                `https://quickchart.io/qr?text=${qrData}&size=150`
+            ];
+            
+            let urlIndex = 0;
+            
+            function tryNextUrl() {
+                if (urlIndex >= qrUrls.length) {
+                    qrContainer.innerHTML = '<div style="color: #666; font-size: 12px;">QR code unavailable</div>';
+                    return;
+                }
+                
+                const img = new Image();
+                img.onload = function() {
+                    qrContainer.innerHTML = '';
+                    qrContainer.appendChild(img);
+                };
+                img.onerror = function() {
+                    urlIndex++;
+                    tryNextUrl();
+                };
+                img.src = qrUrls[urlIndex];
+                img.style.width = '150px';
+                img.style.height = '150px';
+            }
+            
+            tryNextUrl();
+        }
+
+        // Download vCard
+        function downloadVCard() {
+            const blob = new Blob([vcard], { type: 'text/vcard' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Daniel_Green.vcf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Share function
+        function shareCard() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Daniel Green - Contact',
+                    text: 'CEO at Electron Green',
+                    url: window.location.href
+                });
+            } else {
+                alert('Link: ' + window.location.href);
+            }
+        }
+
+        // Generate QR when page loads
+        window.addEventListener('load', generateQR);
+    </script>
+</body>
+</html>
